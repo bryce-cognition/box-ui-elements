@@ -9,28 +9,28 @@ import EmptyState from '../common/empty-state';
 import ProgressBar from '../common/progress-bar';
 import ItemList from './ItemList';
 import { VIEW_ERROR, VIEW_SELECTED } from '../../constants';
-import type { View, Collection } from '../../common/types/core';
+import type { View, Collection, BoxItem } from '../../common/types/core';
 
 import './Content.scss';
 
-type Props = {
-    canSetShareAccess: boolean,
-    currentCollection: Collection,
-    extensionsWhitelist: string[],
-    focusedRow: number,
-    hasHitSelectionLimit: boolean,
-    isSingleSelect: boolean,
-    isSmall: boolean,
-    onFocusChange: Function,
-    onItemClick: Function,
-    onItemSelect: Function,
-    onShareAccessChange: Function,
-    rootElement?: HTMLElement,
-    rootId: string,
-    selectableType: string,
-    tableRef: Function,
-    view: View,
-};
+interface Props {
+    canSetShareAccess: boolean;
+    currentCollection: Collection;
+    extensionsWhitelist: string[];
+    focusedRow: number;
+    hasHitSelectionLimit: boolean;
+    isSingleSelect: boolean;
+    isSmall: boolean;
+    onFocusChange: (index: number) => void;
+    onItemClick: (item: BoxItem) => void;
+    onItemSelect: (item: BoxItem) => void;
+    onShareAccessChange: (access: string, item: BoxItem) => void;
+    rootElement?: HTMLElement;
+    rootId: string;
+    selectableType: string;
+    tableRef: React.Ref<typeof ItemList>;
+    view: View;
+}
 
 /**
  * Determines if we should show the empty state

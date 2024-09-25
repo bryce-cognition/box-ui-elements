@@ -20,24 +20,24 @@ import type { View, Collection, BoxItem } from '../../common/types/core';
 import '@box/react-virtualized/styles.css';
 import './ItemList.scss';
 
-type Props = {
-    canSetShareAccess: boolean,
-    currentCollection: Collection,
-    extensionsWhitelist: string[],
-    focusedRow: number,
-    hasHitSelectionLimit: boolean,
-    isSingleSelect: boolean,
-    isSmall: boolean,
-    onFocusChange: Function,
-    onItemClick: Function,
-    onItemSelect: Function,
-    onShareAccessChange: Function,
-    rootElement?: HTMLElement,
-    rootId: string,
-    selectableType: string,
-    tableRef: Function,
-    view: View,
-};
+interface Props {
+    canSetShareAccess: boolean;
+    currentCollection: Collection;
+    extensionsWhitelist: string[];
+    focusedRow: number;
+    hasHitSelectionLimit: boolean;
+    isSingleSelect: boolean;
+    isSmall: boolean;
+    onFocusChange: (index: number) => void;
+    onItemClick: (item: BoxItem) => void;
+    onItemSelect: (item: BoxItem) => void;
+    onShareAccessChange: (access: string, item: BoxItem) => void;
+    rootElement?: HTMLElement;
+    rootId: string;
+    selectableType: string;
+    tableRef: React.Ref<Table>;
+    view: View;
+}
 
 const ItemList = ({
     view,
@@ -76,7 +76,7 @@ const ItemList = ({
     const { id, items = [] }: Collection = currentCollection;
     const rowCount: number = items.length;
 
-    const rowClassName = ({ index }) => {
+    const rowClassName = ({ index }: { index: number }) => {
         if (index === -1) {
             return '';
         }
@@ -94,9 +94,9 @@ const ItemList = ({
         rowData,
         index,
     }: {
-        event: Event & { target: HTMLElement },
-        index: number,
-        rowData: BoxItem,
+        event: Event & { target: HTMLElement };
+        index: number;
+        rowData: BoxItem;
     }) => {
         // If the click is happening on a clickable element on the item row, ignore row selection
         if (

@@ -32,7 +32,7 @@ describe('elements/content-picker/Footer', () => {
             // https://www.w3.org/WAI/ARIA/apg/patterns/button/
             // When the action associated with a button is unavailable, the button has aria-disabled set to true.
             expect(chooseButton.html().includes('aria-disabled')).toBe(true);
-            expect(chooseButton.prop('disabled')).toBe(true);
+            expect(chooseButton.prop('isDisabled')).toBe(true);
         });
 
         test('should render Footer buttons with aria-label', () => {
