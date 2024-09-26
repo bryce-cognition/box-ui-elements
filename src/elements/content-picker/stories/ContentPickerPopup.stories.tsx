@@ -26,7 +26,9 @@ const Template: StoryFn = args => (
         modal={{
             title: 'Content Picker',
             buttonLabel: 'Select',
-            onRequestClose: () => {}, // Removed console.log
+            onRequestClose: () => {
+                console.log('Modal close requested');
+            },
         }}
         {...args}
     >
