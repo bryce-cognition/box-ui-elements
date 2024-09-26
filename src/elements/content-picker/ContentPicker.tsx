@@ -6,7 +6,6 @@
 
 import 'regenerator-runtime/runtime';
 import React, { Component } from 'react';
-import type { Node } from 'react';
 import classNames from 'classnames';
 import debounce from 'lodash/debounce';
 import getProp from 'lodash/get';
@@ -65,75 +64,76 @@ import type {
     BoxItem,
     Collection,
 } from '../../common/types/core';
+import type { Table } from '../../components/table/Table';
 
 import '../common/fonts.scss';
 import '../common/base.scss';
 import '../common/modal.scss';
 import './ContentPicker.scss';
 
-type Props = {
-    apiHost: string,
-    autoFocus: boolean,
-    canCreateNewFolder: boolean,
-    canSetShareAccess: boolean,
-    canUpload: boolean,
-    cancelButtonLabel?: string,
-    chooseButtonLabel?: string,
-    className: string,
-    clearSelectedItemsOnNavigation: boolean,
-    clientName: string,
-    contentUploaderProps: ContentUploaderProps,
-    currentFolderId?: string,
-    defaultView: DefaultView,
-    extensions: string[],
-    initialPage: number,
-    initialPageSize: number,
-    isHeaderLogoVisible?: boolean,
-    isLarge: boolean,
-    isPaginationVisible?: boolean,
-    isSmall: boolean,
-    isTouch: boolean,
-    language?: string,
-    logoUrl?: string,
-    maxSelectable: number,
-    measureRef?: Function,
-    messages?: StringMap,
-    onCancel: Function,
-    onChoose: Function,
-    renderCustomActionButtons?: ({
-        onCancel: Function,
-        onChoose: Function,
-        selectedCount: number,
-        selectedItems: BoxItem[],
-    }) => Node,
-    requestInterceptor?: Function,
-    responseInterceptor?: Function,
-    rootFolderId: string,
-    sharedLink?: string,
-    sharedLinkPassword?: string,
-    showSelectedButton: boolean,
-    sortBy: SortBy,
-    sortDirection: SortDirection,
-    token: Token,
-    type: string,
-    uploadHost: string,
-};
+interface Props {
+    apiHost: string;
+    autoFocus: boolean;
+    canCreateNewFolder: boolean;
+    canSetShareAccess: boolean;
+    canUpload: boolean;
+    cancelButtonLabel?: string;
+    chooseButtonLabel?: string;
+    className: string;
+    clearSelectedItemsOnNavigation: boolean;
+    clientName: string;
+    contentUploaderProps: Record<string, unknown>; // TODO: Replace with correct type
+    currentFolderId?: string;
+    defaultView: DefaultView;
+    extensions: string[];
+    initialPage: number;
+    initialPageSize: number;
+    isHeaderLogoVisible?: boolean;
+    isLarge: boolean;
+    isPaginationVisible?: boolean;
+    isSmall: boolean;
+    isTouch: boolean;
+    language?: string;
+    logoUrl?: string;
+    maxSelectable: number;
+    measureRef?: React.LegacyRef<HTMLDivElement> | ((element: HTMLDivElement | null) => void);
+    messages?: StringMap;
+    onCancel: () => void;
+    onChoose: (selectedItems: BoxItem[]) => void;
+    renderCustomActionButtons?: (props: {
+        onCancel: () => void;
+        onChoose: () => void;
+        selectedCount: number;
+        selectedItems: BoxItem[];
+    }) => React.ReactNode;
+    requestInterceptor?: (url: string, options: Record<string, unknown>) => Promise<unknown>;
+    responseInterceptor?: (response: Response) => Promise<unknown>;
+    rootFolderId: string;
+    sharedLink?: string;
+    sharedLinkPassword?: string;
+    showSelectedButton: boolean;
+    sortBy: SortBy;
+    sortDirection: SortDirection;
+    token: Token;
+    type: string;
+    uploadHost: string;
+}
 
 type State = {
-    currentCollection: Collection,
-    currentOffset: number,
-    currentPageSize: number,
-    errorCode: string,
-    focusedRow: number,
-    isCreateFolderModalOpen: boolean,
-    isLoading: boolean,
-    isUploadModalOpen: boolean,
-    rootName: string,
-    searchQuery: string,
-    selected: { [string]: BoxItem },
-    sortBy: SortBy,
-    sortDirection: SortDirection,
-    view: View,
+    currentCollection: Collection;
+    currentOffset: number;
+    currentPageSize: number;
+    errorCode: string;
+    focusedRow: number;
+    isCreateFolderModalOpen: boolean;
+    isLoading: boolean;
+    isUploadModalOpen: boolean;
+    rootName: string;
+    searchQuery: string;
+    selected: { [key: string]: BoxItem };
+    sortBy: SortBy;
+    sortDirection: SortDirection;
+    view: View;
 };
 
 const defaultType = `${TYPE_FILE},${TYPE_WEBLINK}`;
@@ -147,7 +147,7 @@ class ContentPicker extends Component<Props, State> {
 
     props: Props;
 
-    table: any;
+    table: Table;
 
     rootElement: HTMLElement;
 
@@ -273,8 +273,8 @@ class ContentPicker extends Component<Props, State> {
      */
     componentDidMount() {
         const { defaultView, currentFolderId }: Props = this.props;
-        this.rootElement = ((document.getElementById(this.id): any): HTMLElement);
-        this.appElement = ((this.rootElement.firstElementChild: any): HTMLElement);
+        this.rootElement = document.getElementById(this.id) as HTMLElement;
+        this.appElement = this.rootElement.firstElementChild as HTMLElement;
 
         if (defaultView === DEFAULT_VIEW_RECENTS) {
             this.showRecents();
@@ -485,6 +485,7 @@ class ContentPicker extends Component<Props, State> {
         const commonState = {
             currentCollection: collection,
             rootName: id === rootFolderId ? name : '',
+            selected: this.state.selected, // Ensure selected is always included
         };
 
         // New folder state
@@ -514,7 +515,7 @@ class ContentPicker extends Component<Props, State> {
      * @param {Boolean|void} [triggerNavigationEvent] - To focus the grid
      * @return {void}
      */
-    fetchFolder = (id?: string, triggerNavigationEvent?: boolean = true): void => {
+    fetchFolder = (id?: string, triggerNavigationEvent: boolean = true): void => {
         const { rootFolderId }: Props = this.props;
         const {
             currentCollection: { id: currentId },
@@ -654,15 +655,18 @@ class ContentPicker extends Component<Props, State> {
      * @param {Boolean|void} [forceFetch] To void cache
      * @return {void}
      */
-    debouncedSearch: Function = debounce((id: string, query: string): void => {
-        const { currentOffset, currentPageSize }: State = this.state;
+    debouncedSearch: _.DebouncedFunc<(id: string, query: string) => void> = debounce(
+        (id: string, query: string): void => {
+            const { currentOffset, currentPageSize }: State = this.state;
 
-        this.api
-            .getSearchAPI()
-            .search(id, query, currentPageSize, currentOffset, this.searchSuccessCallback, this.errorCallback, {
-                forceFetch: true,
-            });
-    }, DEFAULT_SEARCH_DEBOUNCE);
+            this.api
+                .getSearchAPI()
+                .search(id, query, currentPageSize, currentOffset, this.searchSuccessCallback, this.errorCallback, {
+                    forceFetch: true,
+                });
+        },
+        DEFAULT_SEARCH_DEBOUNCE,
+    );
 
     /**
      * Searches
@@ -1031,7 +1035,7 @@ class ContentPicker extends Component<Props, State> {
      * @param {Component} react component
      * @return {void}
      */
-    tableRef = (table: React$Component<*, *>) => {
+    tableRef = (table: unknown) => {
         this.table = table;
     };
 
@@ -1066,7 +1070,7 @@ class ContentPicker extends Component<Props, State> {
      * @inheritdoc
      * @return {void}
      */
-    onKeyDown = (event: SyntheticKeyboardEvent<HTMLElement>) => {
+    onKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
         if (isInputElement(event.target)) {
             return;
         }

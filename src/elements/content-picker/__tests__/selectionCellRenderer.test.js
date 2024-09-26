@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '../../../test-utils/testing-library.tsx';
 import selectionCellRenderer from '../selectionCellRenderer';
 
 const rowData = {
@@ -15,8 +15,8 @@ describe('selectionCellRenderer', () => {
     ])('should render %s if isRadio is %s', (type, isRadio) => {
         const Element = selectionCellRenderer(() => {}, 'file, web_link', [], false, isRadio);
 
-        const wrapper = shallow(<Element rowData={rowData} />);
-        expect(wrapper.exists(type)).toBe(true);
+        render(<Element rowData={rowData} />);
+        expect(screen.getByRole(isRadio ? 'radio' : 'checkbox')).toBeInTheDocument();
     });
 
     test.each([
@@ -25,7 +25,8 @@ describe('selectionCellRenderer', () => {
     ])('should render %s if isRadio is %s', (type, isRadio) => {
         const Element = selectionCellRenderer(() => {}, 'file, web_link', [], false, isRadio);
 
-        const wrapper = shallow(<Element rowData={rowData} />);
-        expect(wrapper.prop(type)).toBe(true);
+        render(<Element rowData={rowData} />);
+        const input = screen.getByRole(isRadio ? 'radio' : 'checkbox');
+        expect(input).toBeChecked();
     });
 });
